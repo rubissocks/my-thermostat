@@ -1,0 +1,6 @@
+{
+    "users": [
+    {"esp_id": "43130", "password": "pass" },
+    {"esp_id": "43131", "password": "password456" }
+  ]
+}

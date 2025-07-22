@@ -1,0 +1,30 @@
+# Makes me owner of home file
+sudo chown -R $USER:$USER ~
+
+# Login with password (passauth is enabled)
+ssh rubi@192.168.0.18
+
+# Login with shh
+ssh -i ~/.ssh/id_ed25519 rubi@192.168.0.18
+
+# For making shh pubkey
+mkdir -p ~/.ssh  # If folder doesn't exist
+echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBy+8/QQTtVxAL69bWEPP2eFO8BhPC7mYatjF+JQY1UD rubi.zelenik@gmail.com" >> ~/.ssh/authorized_keys
+chmod 700 ~/.ssh
+chmod 600 ~/.ssh/authorized_keys
+
+# Install node.js and npm and all that
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Copy dir to raspi
+scp -r /kodin/root-pamirel/esp32_backend rubi@192.168.0.35:~/websocket_server
+
+# Install PM2 process manager:
+sudo npm install -g pm2
+pm2 start server.js --name "websocket_server"
+pm2 save
+pm2 startup
+
+# Firewall
+sudo ufw allow 8080/tcp

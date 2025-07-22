@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pamirel</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <nav>
+    <ul>
+      <li><a href="#">greetings</a></li>
+      <li><a href="#">and</a></li>
+      <li><a href="#">salutations</a></li>
+      <li style="float:right"><a href="#">My Thermostat</a></li>
+    </ul>
+  </nav>
+
+  <section class="top">
+    <section class="hello section">
+      <h1>hello</h1>
+      <img src="" class="logo" />
+      <p>front page stuff here</p>
+      <p>front page stuff here</p>
+      <p>front page stuff here</p>
+      <p>front page stuff here</p>
+      <p>front page stuff here</p>
+    </section>
+
+    <section class="login section">
+      <h2>My Thermostat</h2>
+      <form onsubmit="login(); return false;">
+        <input type="text" id="esp_id" placeholder="Thermostat ID" />
+        <input type="password" id="password" placeholder="Password" />
+        <button type="submit" id="the_login">Log in</button>
+      </form>
+    </section>
+  </section>
+
+  <p id="login_successful"></p> 
+
+  <p id="history_options"></p>
+
+  <script src="auth.js"></script>
+</body>
+</html>

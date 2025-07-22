@@ -1,0 +1,77 @@
+# Code for the nginx proxy server, which redirects from 433 the correct router port (443 for https and wss)
+# It distinguishes between connections from the github page and esp.
+# It handles the rate limiting of requests, adding headers and blocking unauthorised clients
+
+# Define rate limit
+limit_req_zone $binary_remote_addr zone=default:10m rate=5r/s;
+
+server {
+    listen 443 ssl;
+    server_name raspiwebsocket.duckdns.org;
+
+    ssl_certificate     /etc/letsencrypt/live/raspiwebsocket.duckdns.org/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/raspiwebsocket.duckdns.org/privkey.pem;
+
+    # HTML displayed on https://raspiwebsocket.duckdns.org when server is running
+    location / {
+        default_type text/html;
+        return 200 "<h1>WebSocket Server running on path /socket/ </h1><p>you cant access it tho, sorry</p>";
+    }
+
+    location /socket/ {
+        proxy_pass http://localhost:300;
+        proxy_http_version 1.1;
+
+        # Blocks all connections by default
+        set $is_valid_client 0;
+
+        # Other defaults
+        set $cors_origin "";
+        set $origin_header "";
+
+        # Adds necessary websocket headers
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+
+
+        # Checks if origin is the frontend github page and allows it to pass
+        if ($http_origin ~* ^https://pamirel\.com$) {
+            set $is_valid_client 1;
+            set $cors_origin $http_origin;
+        }
+
+        # If ESP device connects, gives it origin and allows it to pass 
+        if ($http_sec_websocket_protocol = "arduino") {
+            set $is_valid_client 1;
+            set $origin_header "https://esp32.local";
+        }
+
+        # If client isn't one of the allowed clients, connection is blocked
+        if ($is_valid_client = 0) {
+                return 403;
+            }
+
+        # Rate limiting initialised
+        limit_req zone=default burst=20 nodelay;
+
+        # Set origin for esp
+        proxy_set_header Origin $origin_header;
+
+        # Gives 24 hours to reconnect (for esp, since esp is expected to be connected 24/7)
+        proxy_connect_timeout 1d;
+        proxy_send_timeout 1d;
+        proxy_read_timeout 1d;
+
+        # CORS headers for frontend (ignored by esp)
+        add_header 'Access-Control-Allow-Origin' "$cors_origin" always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS' always;
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization' always;
+
+        # Handle CORS preflight
+        if ($request_method = OPTIONS) {
+            add_header Content-Length 0;
+            return 204;
+        }
+    }
+}
